@@ -1,56 +1,112 @@
-import { Router } from 'express';
+import { Router } from "express"
+import { productModel } from "../dao/models/products.model.js"
 
-import config from '../config.js';
-import { uploader } from '../uploader.js';
-import productsModel from '../dao/models/products.model.js';
+const productsRouter = Router()
 
-const router = Router();
 
-router.get('/', async (req, res) => {
+productsRouter.get('/', async (req, res) => {
     try {
-        const products = await productsModel.find().lean();
-
-        res.status(200).send({ origin: config.SERVER, payload: products });
-    } catch (err) {
-        res.status(500).send({ origin: config.SERVER, payload: null, error: err.message });
+        const products = await productModel.find({}, { _id: 0, __v: 0 }).lean() 
+        res.render('home', {products})
+    } catch (error) {
+        res.status(400).send('Internal server Error', error)
     }
-});
+})
 
-router.post('/', uploader.single('thumbnail'), async (req, res) => {
+
+productsRouter.get('/realtimeproducts', async (req, res) => {
+    res.render('realTimeProducts', {
+       
+    })
+})
+
+
+productsRouter.get('/', async (req, res) => {
+    const { limit } = req.query
     try {
-        const socketServer = req.app.get('socketServer');
-        const process = await productsModel.create(req.body);
-        
-        res.status(200).send({ origin: config.SERVER, payload: process });
-
-        socketServer.emit('newProduct', req.body);
-    } catch (err) {
-        res.status(500).send({ origin: config.SERVER, payload: null, error: err.message });
+        const products = await productModel.find().limit(limit)
+        res.status(200).send({ result: 'Success', message: products })
+    } catch (error) {
+        req.status(400).send({
+            response: 'Error ', message: error
+        })
     }
-});
+})
 
-router.put('/:id', async (req, res) => {
+
+productsRouter.get('/:id', async (req, res) => {
+    const { id } = req.params
     try {
-        const filter = { _id: req.params.id };
-        const update = req.body;
-        const options = { new: true };
-        const process = await productsModel.findOneAndUpdate(filter, update, options);
-        
-        res.status(200).send({ origin: config.SERVER, payload: process });
-    } catch (err) {
-        res.status(500).send({ origin: config.SERVER, payload: null, error: err.message });
+        const product = await productModel.findById(id)
+        if (!product) {
+            return res.status(404).send('Producto no encontrado')
+        }
+        res.status(200).send({ result: 'Success', message: product })
+    } catch (error) {
+        res.status(404).send({ result: 'Error', message: 'No encontrado' })
     }
-});
+})
 
-router.delete('/:id', async (req, res) => {
+//agregar producto
+
+productsRouter.post('/', async (req, res) => {
+    const { title, description, price, thumbnail, code, stock } = req.body
+
     try {
-        const filter = { _id: req.params.id };
-        const process = await productsModel.findOneAndDelete(filter);
-
-        res.status(200).send({ origin: config.SERVER, payload: process });
-    } catch (err) {
-        res.status(500).send({ origin: config.SERVER, payload: null, error: err.message });
+        let prod = await productModel.create({
+            title,
+            description,
+            price,
+            thumbnail,
+            code,
+            stock,
+        })
+        res.status(200).send({ result: "Success", message: prod })
+    } catch (error) {
+        res.status(400).send({
+            result: 'Error create product', message: error.message
+        })
     }
-});
+})
 
-export default router;
+//actualizar producto
+
+productsRouter.put('/:id', async (req, res) => {
+    const { id } = req.params
+    const { title, description, price, thumbnail, code, stock, status, category } = req.body
+
+    try {
+        const product = await productModel.findByIdAndUpdate(id, {
+            title,
+            description,
+            price,
+            thumbnail,
+            code,
+            stock
+        })
+
+        if (!product) {
+            return res.status(404).send({ result: 'Error', message: 'Product not found' })
+        }
+        res.status(200).send({ result: 'OK', message: 'Product updated' })
+    } catch (error) {
+        res.status(400).send({ result: 'Error updating product', message: error })
+    }
+})
+
+//Eliminar producto
+
+productsRouter.delete('/:id', async (req, res) => {
+    const { id } = req.params
+    try {
+        const product = await productModel.findByIdAndDelete(id)
+        if (!product) {
+            return res.status(404).send({ result: 'Error', message: 'Product not found' })
+        }
+        res.status(200).send({ result: 'Success', message: 'Product deleted', product })
+    } catch (error) {
+        res.status(400).send({ result: 'Error deleting product', message: error })
+    }
+})
+
+export default productsRouter
