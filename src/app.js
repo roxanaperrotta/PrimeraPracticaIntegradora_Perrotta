@@ -12,8 +12,14 @@ import config from './config.js';
 const app=express();
 
 const expressInstance = app.listen(config.PORT, async() => {
-    await mongoose.connect(config.MONGODB_URI);
+    await mongoose.connect(config.MONGODB_URI).then(() => {
+        console.log('Conexión exitosa a la base de datos')
+    })
+    .catch((error) => {
+        console.error('Error conectándose a la base de datos:', error)
+    })
 
+    
     const socketServer = initSocket(expressInstance);
     app.set('socketServer', socketServer);
 
@@ -114,6 +120,7 @@ app.use(express.urlencoded({ extended: true }));
 app.engine('handlebars', handlebars.engine());
 app.set('views', `${config.DIRNAME}/views`);
 app.set('view engine', 'handlebars');
+
 
 app.use ('/', viewsRouter);
 app.use ('/realtimeproducts', viewsRouter)

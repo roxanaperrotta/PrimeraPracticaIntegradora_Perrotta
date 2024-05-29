@@ -1,5 +1,5 @@
 import express from "express";
-import CartManager from "../../managers/cartManager";
+import CartManager from "../../managers/CartManager.js";
 
 const cartManager = new CartManager;
 
