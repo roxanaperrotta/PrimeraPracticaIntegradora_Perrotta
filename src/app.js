@@ -3,13 +3,34 @@ import mongoose from 'mongoose';
 import handlebars from 'express-handlebars';
 import viewsRouter from './routes/views.routes.js';
 import productsRouter from './routes/products.routes.js';
+import {ProductManager} from "./managers/ProductManager.js";
 import initSocket from "./sockets.js";
 import chatRouter from "./routes/chat.routes.js";
 import cartsRouter from "./routes/carts.routes.js";
 import {chatModel} from "./dao/models/chat.model.js";
 import config from './config.js';
+import cors from 'cors';
 
 const app=express();
+const productManager =  new ProductManager ();
+
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+app.engine('handlebars', handlebars.engine());
+app.set('views', `${config.DIRNAME}/views`);
+app.set('view engine', 'handlebars');
+
+
+app.use ('/', viewsRouter);
+app.use ('/realtimeproducts', viewsRouter)
+
+app.use("/api/products", productsRouter);
+app.use("/api/carts", cartsRouter);
+app.use("/api/chat", chatRouter)
+app.use('/static', express.static(`${config.DIRNAME}/public`));
+
 
 const expressInstance = app.listen(config.PORT, async() => {
     await mongoose.connect(config.MONGODB_URI).then(() => {
@@ -113,21 +134,5 @@ const expressInstance = app.listen(config.PORT, async() => {
         } )
     
     })
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-app.engine('handlebars', handlebars.engine());
-app.set('views', `${config.DIRNAME}/views`);
-app.set('view engine', 'handlebars');
-
-
-app.use ('/', viewsRouter);
-app.use ('/realtimeproducts', viewsRouter)
-
-app.use("/api/products", productsRouter);
-app.use("/api/carts", cartsRouter);
-app.use("/api/chat", chatRouter)
-app.use('/static', express.static(`${config.DIRNAME}/public`));
 
 });
