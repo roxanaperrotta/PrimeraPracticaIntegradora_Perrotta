@@ -1,14 +1,14 @@
 import express from "express";
 import mongoose from 'mongoose';
 import handlebars from 'express-handlebars';
-import viewsRouter from './routes/views.routes.js';
-import productsRouter from './routes/products.routes.js';
-import {ProductManager} from "./managers/ProductManager.js";
-import initSocket from "./sockets.js";
-import chatRouter from "./routes/chat.routes.js";
-import cartsRouter from "./routes/carts.routes.js";
-import {chatModel} from "./dao/models/chat.model.js";
-import config from './config.js';
+import viewsRouter from './src/routes/views.routes.js';
+import productsRouter from './src/routes/products.routes.js';
+import {ProductManager} from "./src/managers/ProductManager.js";
+import initSocket from "./src/sockets.js";
+import chatRouter from "./src/routes/chat.routes.js";
+import cartsRouter from "./src/routes/carts.routes.js";
+import {chatModel} from "./src/dao/models/chat.model.js";
+import config from './src/config.js';
 import cors from 'cors';
 
 
