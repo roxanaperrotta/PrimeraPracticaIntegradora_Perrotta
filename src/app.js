@@ -11,12 +11,14 @@ import {chatModel} from "./dao/models/chat.model.js";
 import config from './config.js';
 import cors from 'cors';
 
+
 const app=express();
 const productManager =  new ProductManager ();
 
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use('/static', express.static(`${config.DIRNAME}/public`));
 
 app.engine('handlebars', handlebars.engine());
 app.set('views', `${config.DIRNAME}/views`);
@@ -29,7 +31,6 @@ app.use ('/realtimeproducts', viewsRouter)
 app.use("/api/products", productsRouter);
 app.use("/api/carts", cartsRouter);
 app.use("/api/chat", chatRouter)
-app.use('/static', express.static(`${config.DIRNAME}/public`));
 
 
 const expressInstance = app.listen(config.PORT, async() => {
@@ -38,14 +39,15 @@ const expressInstance = app.listen(config.PORT, async() => {
     })
     .catch((error) => {
         console.error('Error conectándose a la base de datos:', error)
-    })
+    });
+})
 
     
     const socketServer = initSocket(expressInstance);
     app.set('socketServer', socketServer);
 
-    socketServer.on('connection', (socket) => {
-        console.log('Usuario conectado')
+   socketServer.on('connection', (socket) => {
+        console.log('Usuario conectado');
     
         socket.on('message', async (data) => {
             try {
@@ -55,16 +57,16 @@ const expressInstance = app.listen(config.PORT, async() => {
             } catch (error) {
                 console.error('Error de escritura en la base de datos')
             }
-        })
+        });
     
         socket.on('updateMessages', async () => {
           
             const messages = await chatModel.find()
             socketServer.emit('messageLogs', messages)
             socket.broadcast.emit('newUserConnected')
-        })
+        });
     
-    
+
     socketServer.on("connection" , (socket) =>{
         console.log ("Nueva conexión");
         socket.on("mensaje", data =>{
@@ -131,8 +133,9 @@ const expressInstance = app.listen(config.PORT, async() => {
             } catch (error) {
                 socketServer.emit('response', { status: 'error', message: error.message });
             }
-        } )
+        } );
     
-    })
+    });
 
-});
+
+
