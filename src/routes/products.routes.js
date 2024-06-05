@@ -6,7 +6,7 @@ const productsRouter = Router()
 
 productsRouter.get('/', async (req, res) => {
     try {
-        const products = await productModel.find({}, { _id: 0, __v: 0 }).lean() 
+        const products = await productModel.find({}, { __v: 0 }).lean();
         res.render('home', {products})
     } catch (error) {
         res.status(400).send('Internal server Error', error)
